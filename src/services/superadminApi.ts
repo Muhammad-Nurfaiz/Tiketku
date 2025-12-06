@@ -7,6 +7,7 @@ import type {
   EventAdminFormData,
   PlatformSettings,
   UserRole,
+  EventStatus,
 } from '@/types';
 
 // Simulated delay for realistic API behavior
@@ -217,6 +218,42 @@ export async function getDashboardStats(): Promise<DashboardStats> {
 export async function getLatestEvents(limit: number = 5): Promise<Event[]> {
   await delay(300);
   return mockEvents.slice(0, limit);
+}
+
+export async function getEvents(
+  page: number = 1,
+  pageSize: number = 10,
+  search: string = '',
+  statusFilter?: EventStatus
+): Promise<PaginatedResponse<Event>> {
+  await delay(400);
+
+  let filtered = mockEvents;
+  if (search) {
+    const searchLower = search.toLowerCase();
+    filtered = filtered.filter(
+      event =>
+        event.name.toLowerCase().includes(searchLower) ||
+        event.organizerName.toLowerCase().includes(searchLower) ||
+        event.venue.toLowerCase().includes(searchLower)
+    );
+  }
+  if (statusFilter) {
+    filtered = filtered.filter(event => event.status === statusFilter);
+  }
+
+  const total = filtered.length;
+  const totalPages = Math.ceil(total / pageSize);
+  const start = (page - 1) * pageSize;
+  const data = filtered.slice(start, start + pageSize);
+
+  return {
+    data,
+    total,
+    page,
+    pageSize,
+    totalPages,
+  };
 }
 
 export async function getEventAdmins(
