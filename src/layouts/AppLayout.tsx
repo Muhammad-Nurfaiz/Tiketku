@@ -25,8 +25,11 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 
+import { Calendar } from 'lucide-react';
+
 const navigation = [
   { name: 'Dashboard', href: '/superadmin/dashboard', icon: LayoutDashboard },
+  { name: 'Events', href: '/superadmin/events', icon: Calendar },
   { name: 'Event Admins', href: '/superadmin/event-admins', icon: UserCog },
   { name: 'Users', href: '/superadmin/users', icon: Users },
   { name: 'Settings', href: '/superadmin/settings', icon: Settings },
@@ -34,6 +37,7 @@ const navigation = [
 
 const pageNames: Record<string, string> = {
   '/superadmin/dashboard': 'Dashboard',
+  '/superadmin/events': 'Events',
   '/superadmin/event-admins': 'Event Admins',
   '/superadmin/users': 'Users',
   '/superadmin/settings': 'Settings',

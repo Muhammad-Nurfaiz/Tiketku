@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AppLayout } from "./layouts/AppLayout";
 import Dashboard from "./pages/superadmin/Dashboard";
+import Events from "./pages/superadmin/Events";
 import EventAdmins from "./pages/superadmin/EventAdmins";
 import Users from "./pages/superadmin/Users";
 import Settings from "./pages/superadmin/Settings";
@@ -26,6 +27,7 @@ const App = () => (
           <Route path="/superadmin" element={<AppLayout />}>
             <Route index element={<Navigate to="dashboard" replace />} />
             <Route path="dashboard" element={<Dashboard />} />
+            <Route path="events" element={<Events />} />
             <Route path="event-admins" element={<EventAdmins />} />
             <Route path="users" element={<Users />} />
             <Route path="settings" element={<Settings />} />
