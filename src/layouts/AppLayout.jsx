@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Outlet, useLocation } from 'react-router-dom';
+import { Outlet, useLocation, useNavigate, Link } from 'react-router-dom';
 import {
   LayoutDashboard,
   Users,
@@ -12,8 +12,13 @@ import {
   Bell,
   Search,
   LogOut,
+  ShoppingCart,
+  User,
+  Image,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useAuth } from '@/contexts/AuthContext';
+import { getMenuByRole } from '@/config/roleBasedMenu';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
@@ -26,14 +31,6 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 
-const navigation = [
-  { name: 'Dashboard', href: '/superadmin/dashboard', icon: LayoutDashboard },
-  { name: 'Events', href: '/superadmin/events', icon: Ticket },
-  { name: 'Event Admins', href: '/superadmin/event-admins', icon: UserCog },
-  { name: 'Users', href: '/superadmin/users', icon: Users },
-  { name: 'Settings', href: '/superadmin/settings', icon: Settings },
-];
-
 const pageNames = {
   '/superadmin/dashboard': 'Dashboard',
   '/superadmin/events': 'Events',
@@ -45,7 +42,14 @@ const pageNames = {
 export function AppLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const location = useLocation();
-  const currentPageName = pageNames[location.pathname] ?? 'Superadmin';
+  const navigate = useNavigate();
+  const { logout, user } = useAuth();
+
+  // Get menu based on user role
+  const menu = user ? getMenuByRole(user.role) : [];
+  
+  // Determine current page name
+  const currentPageName = menu.find(item => location.pathname.startsWith(item.href))?.name || 'Dashboard';
 
   return (
     <div className="flex h-screen bg-background">
@@ -64,15 +68,14 @@ export function AppLayout() {
           </div>
 
           {/* Navigation */}
+          {/* Navigation - role-based single-level menu */}
           <nav className="flex-1 overflow-y-auto p-4">
             <ul className="space-y-2">
-              {navigation.map((item) => {
-                const Icon = item.icon;
+              {menu.map((item) => {
                 const isActive = location.pathname.startsWith(item.href);
                 return (
                   <li key={item.name}>
-                    <a
-                      href={item.href}
+                    <Link to={item.href}
                       className={cn(
                         'flex items-center gap-3 px-4 py-2 rounded-lg text-sm font-medium transition-colors',
                         isActive
@@ -80,9 +83,9 @@ export function AppLayout() {
                           : 'text-slate-300 hover:text-white hover:bg-slate-800'
                       )}
                     >
-                      <Icon className="h-5 w-5" />
+                      <span className="h-5 w-5" />
                       {item.name}
-                    </a>
+                    </Link>
                   </li>
                 );
               })}
@@ -93,7 +96,10 @@ export function AppLayout() {
           <div className="border-t border-slate-800 p-4">
             <div className="flex items-center gap-3 text-sm text-slate-300">
               <div className="h-2 w-2 rounded-full bg-green-500"></div>
-              Super Admin
+              <div>
+                <p className="font-semibold text-slate-100">{user?.name || 'User'}</p>
+                <p className="text-xs text-slate-400">{user?.role === 'SUPERADMIN' ? 'Super Admin' : 'Event Admin'}</p>
+              </div>
             </div>
           </div>
         </div>
@@ -139,21 +145,32 @@ export function AppLayout() {
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <button>
-                    <Avatar className="h-9 w-9">
-                      <AvatarFallback>SA</AvatarFallback>
+                    <Avatar className="h-9 w-9 cursor-pointer">
+                      <AvatarFallback className="bg-blue-600 text-white font-bold">
+                        {user?.name?.split(' ').map(n => n[0]).join('').toUpperCase() || 'U'}
+                      </AvatarFallback>
                     </Avatar>
                   </button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="end">
-                  <DropdownMenuLabel>Super Admin</DropdownMenuLabel>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem>Profile</DropdownMenuItem>
-                  <DropdownMenuItem>Settings</DropdownMenuItem>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem className="gap-2">
-                    <LogOut className="h-4 w-4" /> Logout
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
+                  <DropdownMenuContent align="end">
+                    <DropdownMenuLabel>{user?.name || 'User'}</DropdownMenuLabel>
+                    <div className="px-2 py-1 text-xs text-slate-400">
+                      {user?.role === 'SUPERADMIN' ? 'Super Admin' : 'Event Admin'}
+                    </div>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem onClick={() => navigate(user?.role === 'SUPERADMIN' ? '/superadmin/users' : '/eventadmin/settings')}>Profile</DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => navigate(user?.role === 'SUPERADMIN' ? '/superadmin/settings' : '/eventadmin/settings')}>Settings</DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem
+                      className="gap-2"
+                      onClick={() => {
+                        logout();
+                        navigate('/login');
+                      }}
+                    >
+                      <LogOut className="h-4 w-4" /> Logout
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
               </DropdownMenu>
             </div>
           </div>
