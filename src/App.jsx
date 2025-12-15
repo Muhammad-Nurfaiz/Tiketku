@@ -5,6 +5,8 @@ import { ToastProvider } from "@/components/common/Toast";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { AuthProvider } from '@/contexts/AuthContext';
 import RequireAuth from '@/components/common/RequireAuth';
+import RequireRole from '@/components/common/RequireRole';
+import RoleRenderer from '@/components/common/RoleRenderer';
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AppLayout } from "./layouts/AppLayout";
 import Dashboard from "./pages/superadmin/Dashboard";
@@ -13,6 +15,12 @@ import EventAdmins from "./pages/superadmin/EventAdmins";
 import Users from "./pages/superadmin/Users";
 import Settings from "./pages/superadmin/Settings";
 import Banner from "./pages/superadmin/Banner";
+import EventAdminDashboard from "./pages/eventadmin/Dashboard";
+import EventAdminEvents from "./pages/eventadmin/Events";
+import EventAdminOrders from "./pages/eventadmin/Orders";
+import EventAdminTickets from "./pages/eventadmin/Tickets";
+import EventAdminScanStaff from "./pages/eventadmin/ScanStaff";
+import EventAdminSettings from "./pages/eventadmin/Settings";
 import Login from "./pages/Login";
 import NotFound from "./pages/NotFound";
 
@@ -27,43 +35,47 @@ const App = () => (
           <Sonner />
           <BrowserRouter>
             <Routes>
-              {/* Redirect root to login */}
-              <Route path="/" element={<Navigate to="/login" replace />} />
+              {/* Root: show login UI at `/` without performing an automatic redirect */}
+              <Route path="/" element={<Login />} />
               
-              {/* Superadmin routes (protected) */}
-              <Route
-                path="/superadmin"
-                element={
-                  <RequireAuth>
-                    <AppLayout />
-                  </RequireAuth>
-                }
-              >
-                <Route index element={<Navigate to="dashboard" replace />} />
-                <Route path="dashboard" element={<Dashboard />} />
-                <Route path="events" element={<Events />} />
-                <Route path="event-admins" element={<EventAdmins />} />
-                <Route path="users" element={<Users />} />
-                <Route path="banner" element={<Banner />} />
-                <Route path="settings" element={<Settings />} />
-              </Route>
+              {/* Protected routes without role prefixes; role enforced per-route */}
+              <Route element={<RequireAuth><AppLayout /></RequireAuth>}>
+                {/* Dashboard - shared path */}
+                <Route
+                  path="/dashboard"
+                  element={
+                    <RoleRenderer
+                      map={{
+                        SUPERADMIN: <Dashboard />,
+                        EVENT_ADMIN: <EventAdminDashboard />,
+                      }}
+                    />
+                  }
+                />
 
-              {/* Event Admin routes (protected - same layout, different pages) */}
-              <Route
-                path="/eventadmin"
-                element={
-                  <RequireAuth>
-                    <AppLayout />
-                  </RequireAuth>
-                }
-              >
-                <Route index element={<Navigate to="dashboard" replace />} />
-                <Route path="dashboard" element={<div className="text-2xl font-bold">Event Admin Dashboard (Coming Soon)</div>} />
-                <Route path="events" element={<div className="text-2xl font-bold">Event Admin Events (Coming Soon)</div>} />
-                <Route path="orders" element={<div className="text-2xl font-bold">Event Admin Orders (Coming Soon)</div>} />
-                <Route path="tickets" element={<div className="text-2xl font-bold">Event Admin Tickets (Coming Soon)</div>} />
-                <Route path="scan-staff" element={<div className="text-2xl font-bold">Event Admin Scan Staff (Coming Soon)</div>} />
-                <Route path="settings" element={<div className="text-2xl font-bold">Event Admin Settings (Coming Soon)</div>} />
+                {/* Events - shared path, role-specific content */}
+                <Route
+                  path="/events"
+                  element={
+                    <RoleRenderer
+                      map={{
+                        SUPERADMIN: <Events />,
+                        EVENT_ADMIN: <EventAdminEvents />,
+                      }}
+                    />
+                  }
+                />
+
+                {/* Superadmin-only pages */}
+                <Route path="/event-admins" element={<RequireRole allowed={["SUPERADMIN"]}><EventAdmins /></RequireRole>} />
+                <Route path="/users" element={<RequireRole allowed={["SUPERADMIN"]}><Users /></RequireRole>} />
+                <Route path="/banner" element={<RequireRole allowed={["SUPERADMIN"]}><Banner /></RequireRole>} />
+                <Route path="/settings" element={<RoleRenderer map={{ SUPERADMIN: <Settings />, EVENT_ADMIN: <EventAdminSettings /> }} />} />
+
+                {/* Event Admin-only pages */}
+                <Route path="/orders" element={<RequireRole allowed={["EVENT_ADMIN"]}><EventAdminOrders /></RequireRole>} />
+                <Route path="/tickets" element={<RequireRole allowed={["EVENT_ADMIN"]}><EventAdminTickets /></RequireRole>} />
+                <Route path="/scan-staff" element={<RequireRole allowed={["EVENT_ADMIN"]}><EventAdminScanStaff /></RequireRole>} />
               </Route>
 
               {/* Login route */}

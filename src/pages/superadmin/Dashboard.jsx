@@ -105,7 +105,7 @@ export default function Dashboard() {
             <h2 className="text-lg font-semibold">Latest Events</h2>
             <p className="text-sm text-muted-foreground">Recent events on your platform</p>
           </div>
-          <Link to="/superadmin/events">
+          <Link to="/events" state={{ fromMenu: true }}>
             <Button variant="outline" size="sm" className="gap-2">
               View All <ArrowRight className="h-4 w-4" />
             </Button>

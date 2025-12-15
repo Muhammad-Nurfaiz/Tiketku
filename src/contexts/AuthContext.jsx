@@ -9,16 +9,14 @@ const MOCK_USERS = {
 };
 
 export function AuthProvider({ children }) {
-  const [user, setUser] = useState(null);
-
-  useEffect(() => {
+  const [user, setUser] = useState(() => {
     try {
       const raw = localStorage.getItem('tiketku_auth');
-      if (raw) setUser(JSON.parse(raw));
+      return raw ? JSON.parse(raw) : null;
     } catch (e) {
-      // ignore
+      return null;
     }
-  }, []);
+  });
 
   const login = async (email, password) => {
     // Basic validation
@@ -56,6 +54,7 @@ export function AuthProvider({ children }) {
   const logout = () => {
     setUser(null);
     try { localStorage.removeItem('tiketku_auth'); } catch (e) {}
+    // ensure no session-specific keys remain (we no longer use sessionStorage)
   };
 
   return (

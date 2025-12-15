@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Outlet, useLocation, useNavigate, Link } from 'react-router-dom';
 import {
   LayoutDashboard,
@@ -19,6 +19,7 @@ import {
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/contexts/AuthContext';
 import { getMenuByRole } from '@/config/roleBasedMenu';
+import NotFound from '@/pages/NotFound';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
@@ -32,11 +33,11 @@ import {
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 
 const pageNames = {
-  '/superadmin/dashboard': 'Dashboard',
-  '/superadmin/events': 'Events',
-  '/superadmin/event-admins': 'Event Admins',
-  '/superadmin/users': 'Users',
-  '/superadmin/settings': 'Settings',
+  '/dashboard': 'Dashboard',
+  '/events': 'Events',
+  '/event-admins': 'Event Admins',
+  '/users': 'Users',
+  '/settings': 'Settings',
 };
 
 export function AppLayout() {
@@ -47,6 +48,47 @@ export function AppLayout() {
 
   // Get menu based on user role
   const menu = user ? getMenuByRole(user.role) : [];
+
+  // Note: we intentionally do not persist navigation state to sessionStorage
+
+  // If the user manually navigates to a path that is not present in their menu,
+  // show NotFound to avoid revealing routes they shouldn't access.
+  const allowedPaths = menu.map((m) => m.href);
+  const isAllowedPath = allowedPaths.some((p) => location.pathname === p || location.pathname.startsWith(p + '/'));
+  const cameFromMenu = location.state?.fromMenu === true;
+  const cameFromLogin = location.state?.fromLogin === true;
+
+  // Detect a full page reload (user pressed refresh). When reloading an allowed
+  // route like `/dashboard`, allow showing the page even if `location.state`
+  // is lost. Manual URL edits will still show NotFound unless the navigation
+  // is a reload and the path is allowed.
+  let isReload = false;
+  try {
+    const nav = performance.getEntriesByType && performance.getEntriesByType('navigation')?.[0];
+    if (nav && nav.type === 'reload') isReload = true;
+    // fallback for older browsers
+    if (!isReload && performance?.navigation && performance.navigation.type === 1) isReload = true;
+  } catch (e) {
+    // ignore
+  }
+
+  // Also allow reload when the last recorded internal path matches the
+  // current pathname. This is a conservative sessionStorage fallback that
+  // only permits showing a page after the user previously navigated to it
+  // from inside the app (menu/login). It does not expose routes when the
+  // user manually typed a previously-unseen path.
+  let lastInternalMatch = false;
+  try {
+    lastInternalMatch = typeof window !== 'undefined' && sessionStorage.getItem('lastInternalPath') === location.pathname;
+  } catch (e) {
+    lastInternalMatch = false;
+  }
+
+  const allowedToShow = isAllowedPath && (cameFromMenu || cameFromLogin || isReload || lastInternalMatch);
+
+  if (!allowedToShow) {
+    return <NotFound />;
+  }
   
   // Determine current page name
   const currentPageName = menu.find(item => location.pathname.startsWith(item.href))?.name || 'Dashboard';
@@ -75,7 +117,8 @@ export function AppLayout() {
                 const isActive = location.pathname.startsWith(item.href);
                 return (
                   <li key={item.name}>
-                    <Link to={item.href}
+                    <Link to={item.href} state={{ fromMenu: true }}
+                      onClick={() => { try { sessionStorage.setItem('lastInternalPath', item.href); } catch (e) {} }}
                       className={cn(
                         'flex items-center gap-3 px-4 py-2 rounded-lg text-sm font-medium transition-colors',
                         isActive
@@ -158,12 +201,13 @@ export function AppLayout() {
                       {user?.role === 'SUPERADMIN' ? 'Super Admin' : 'Event Admin'}
                     </div>
                     <DropdownMenuSeparator />
-                    <DropdownMenuItem onClick={() => navigate(user?.role === 'SUPERADMIN' ? '/superadmin/users' : '/eventadmin/settings')}>Profile</DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => navigate(user?.role === 'SUPERADMIN' ? '/superadmin/settings' : '/eventadmin/settings')}>Settings</DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => { try { sessionStorage.setItem('lastInternalPath', user?.role === 'SUPERADMIN' ? '/users' : '/settings'); } catch (e) {} const p = user?.role === 'SUPERADMIN' ? '/users' : '/settings'; navigate(p, { state: { fromMenu: true } }); }}>Profile</DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => { try { sessionStorage.setItem('lastInternalPath', '/settings'); } catch (e) {} navigate('/settings', { state: { fromMenu: true } }); }}>Settings</DropdownMenuItem>
                     <DropdownMenuSeparator />
                     <DropdownMenuItem
                       className="gap-2"
                       onClick={() => {
+                        try { sessionStorage.removeItem('lastInternalPath'); } catch (e) {}
                         logout();
                         navigate('/login');
                       }}

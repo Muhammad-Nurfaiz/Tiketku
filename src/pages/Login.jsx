@@ -15,8 +15,13 @@ export default function Login() {
   const { addToast } = useToast();
   const { login, isAuthenticated } = useAuth();
 
-  // If already authenticated redirect to dashboard
-  if (isAuthenticated) return <Navigate to="/superadmin/dashboard" replace />;
+  // If already authenticated redirect to the original requested page (if any)
+  // so reloads that triggered a redirect to /login bring the user back to
+  // their intended internal path instead of always sending them to /dashboard.
+  if (isAuthenticated) {
+    const from = location.state?.from?.pathname || '/dashboard';
+    return <Navigate to={from} replace state={{ fromLogin: true }} />;
+  }
 
   const handleSubmit = async (e) => {
     e?.preventDefault();
@@ -29,8 +34,9 @@ export default function Login() {
     try {
       await login(email.trim(), password);
       addToast('Login berhasil', 'success');
-      const from = location.state?.from?.pathname || '/superadmin/dashboard';
-      navigate(from, { replace: true });
+      const from = location.state?.from?.pathname || '/dashboard';
+      try { sessionStorage.setItem('lastInternalPath', from); } catch (e) {}
+      navigate(from, { replace: true, state: { fromLogin: true } });
     } catch (err) {
       addToast(err?.message || 'Gagal login', 'error');
     } finally {
