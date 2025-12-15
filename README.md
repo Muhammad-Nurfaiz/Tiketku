@@ -33,7 +33,7 @@ This project was originally built with **React + TypeScript** but has been conve
 ## 🛠 Technology Stack
 
 ### Core Framework
-- **React** 18.3.1 - UI library
+- **React** 19.0.0 - UI library
 - **React Router** 6.30.1 - Client-side routing
 - **Vite** 5.4.19 - Fast build tool and dev server
 - **@vitejs/plugin-react-swc** 3.14.0 - Lightning-fast SWC compiler for React
