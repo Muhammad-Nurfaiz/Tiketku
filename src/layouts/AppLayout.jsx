@@ -224,6 +224,7 @@ export function AppLayout() {
         <main className="flex-1 overflow-y-auto p-6">
           <Outlet />
         </main>
+        {/* toasts are rendered by the ToastProvider */}
       </div>
 
       {/* Mobile overlay */}

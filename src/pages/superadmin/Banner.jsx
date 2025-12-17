@@ -99,8 +99,9 @@ export default function Banner() {
     }
   };
 
-  const handleDelete = (id) => {
-    if (window.confirm('Apakah Anda yakin ingin menghapus banner ini?')) {
+  const handleDelete = async (id) => {
+    const ok = window.confirm('Hapus banner\n\nApakah Anda yakin ingin menghapus banner ini?');
+    if (ok) {
       try {
         setBanners(banners.filter(b => b.id !== id));
         addToast('Banner berhasil dihapus', 'success');

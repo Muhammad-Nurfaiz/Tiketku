@@ -37,7 +37,8 @@ export default function EventAdmins() {
   }
 
   async function handleDelete(id) {
-    if (window.confirm('Are you sure you want to delete this admin?')) {
+    const ok = window.confirm('Confirm delete\n\nAre you sure you want to delete this admin?');
+    if (ok) {
       try {
         await deleteEventAdmin(id);
         setAdmins(admins.filter(admin => admin.id !== id));

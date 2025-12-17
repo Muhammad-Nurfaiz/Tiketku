@@ -30,10 +30,10 @@ export default function Settings() {
     setIsSaving(true);
     try {
       await updatePlatformSettings(settings);
-      alert('Settings saved successfully');
+      window.alert('Success\n\nSettings saved successfully');
     } catch (error) {
       console.error('Failed to save settings:', error);
-      alert('Failed to save settings');
+      window.alert('Error\n\nFailed to save settings');
     } finally {
       setIsSaving(false);
     }

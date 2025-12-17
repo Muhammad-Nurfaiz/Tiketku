@@ -17,6 +17,10 @@ import Settings from "./pages/superadmin/Settings";
 import Banner from "./pages/superadmin/Banner";
 import EventAdminDashboard from "./pages/eventadmin/Dashboard";
 import EventAdminEvents from "./pages/eventadmin/Events";
+import Categories from "./pages/eventadmin/Categories";
+import Regions from "./pages/eventadmin/Regions";
+import TicketTypes from "./pages/eventadmin/TicketTypes";
+import Reports from "./pages/eventadmin/Reports";
 import EventAdminOrders from "./pages/eventadmin/Orders";
 import EventAdminTickets from "./pages/eventadmin/Tickets";
 import EventAdminScanStaff from "./pages/eventadmin/ScanStaff";
@@ -65,6 +69,10 @@ const App = () => (
                     />
                   }
                 />
+                  <Route path="/categories" element={<RequireRole allowed={["EVENT_ADMIN"]}><Categories /></RequireRole>} />
+                  <Route path="/regions" element={<RequireRole allowed={["EVENT_ADMIN"]}><Regions /></RequireRole>} />
+                  <Route path="/ticket-types" element={<RequireRole allowed={["EVENT_ADMIN"]}><TicketTypes /></RequireRole>} />
+                  <Route path="/reports" element={<RequireRole allowed={["EVENT_ADMIN"]}><Reports /></RequireRole>} />
 
                 {/* Superadmin-only pages */}
                 <Route path="/event-admins" element={<RequireRole allowed={["SUPERADMIN"]}><EventAdmins /></RequireRole>} />

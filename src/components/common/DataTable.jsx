@@ -30,8 +30,8 @@ export function DataTable({ columns, data, loading }) {
           </tr>
         </thead>
         <tbody>
-          {data.map((row, idx) => (
-            <tr key={idx} className="border-b hover:bg-muted/50">
+          {data.map((row) => (
+            <tr key={row.id} className="border-b hover:bg-muted/50">
               {columns.map((column) => (
                 <td key={column.key} className="px-4 py-3 text-sm">
                   {column.render ? column.render(row) : row[column.key]}

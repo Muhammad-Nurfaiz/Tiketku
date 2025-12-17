@@ -1,43 +1,38 @@
 import React, { useState } from 'react';
+import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 
-const initial = Array.from({ length: 20 }).map((_, i) => ({
+const initialRegions = Array.from({ length: 10 }).map((_, i) => ({
   id: i + 1,
-  code: `ORD-${1000 + i}`,
-  name: `Customer ${i + 1}`,
-  email: `user${i + 1}@example.com`,
-  total: `Rp ${Intl.NumberFormat('id-ID').format(50000 + i * 1000)}`,
-  status: i % 3 === 0 ? 'pending' : 'paid',
-  method: i % 2 === 0 ? 'Credit Card' : 'Bank Transfer',
-  date: `2025-12-${(i % 28) + 1}`,
+  name: `Wilayah ${i + 1}`,
+  slug: `wilayah-${i + 1}`,
+  events: Math.floor(Math.random() * 8),
+  createdAt: `2025-11-${(i % 28) + 1}`,
 }));
 
-export default function EventAdminOrders() {
-  const [data] = useState(initial);
+export default function Regions() {
+  const [data, setData] = useState(initialRegions);
   const [page, setPage] = useState(1);
   const [perPage, setPerPage] = useState(6);
   const [search, setSearch] = useState('');
-  const [statusFilter, setStatusFilter] = useState('All');
   const [sortKey, setSortKey] = useState(null);
   const [sortDir, setSortDir] = useState('asc');
+  const [open, setOpen] = useState(false);
+  const [name, setName] = useState('');
+  const [slug, setSlug] = useState('');
 
   const columns = [
-    { key: 'code', label: 'Kode Order' },
-    { key: 'name', label: 'Nama Customer' },
-    { key: 'email', label: 'Email' },
-    { key: 'total', label: 'Total' },
-    { key: 'status', label: 'Status' },
-    { key: 'method', label: 'Payment Method' },
-    { key: 'date', label: 'Tanggal' },
+    { key: 'name', label: 'Nama Wilayah' },
+    { key: 'slug', label: 'Slug' },
+    { key: 'events', label: 'Jumlah Event' },
+    { key: 'createdAt', label: 'Tanggal Dibuat' },
   ];
-
-  const normalizeStatus = (s) => (s === 'paid' ? 'Paid' : 'Pending');
 
   const filtered = data.filter((d) => {
     const q = search.trim().toLowerCase();
-    const matchesSearch = !q || [d.code, d.name, d.email, d.method, d.date].join(' ').toLowerCase().includes(q);
-    const matchesStatus = statusFilter === 'All' || normalizeStatus(d.status) === statusFilter;
-    return matchesSearch && matchesStatus;
+    const matchesSearch = !q || [d.name, d.slug, d.events.toString(), d.createdAt].join(' ').toLowerCase().includes(q);
+    return matchesSearch;
   });
 
   const sorted = React.useMemo(() => {
@@ -68,15 +63,27 @@ export default function EventAdminOrders() {
     setSortDir((d) => (d === 'asc' ? 'desc' : 'asc'));
   }
 
+  function handleAdd(e) {
+    e.preventDefault();
+    const item = { id: data.length + 1, name, slug, events: 0, createdAt: new Date().toISOString().slice(0, 10) };
+    setData([item, ...data]);
+    setOpen(false);
+    setName(''); setSlug('');
+    setPage(1);
+  }
+
   return (
     <div>
-      <h2 className="text-lg font-semibold mb-4">Orders</h2>
+      <div className="flex items-center justify-between mb-4">
+        <h2 className="text-lg font-semibold">Wilayah</h2>
+        <Button onClick={() => setOpen(true)}>+ Add Wilayah</Button>
+      </div>
 
       <div className="rounded-lg bg-white shadow-sm p-4">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
           <div className="flex items-center gap-2 w-full sm:w-1/2">
             <Input
-              placeholder="Search orders..."
+              placeholder="Search regions..."
               value={search}
               onChange={(e) => { setSearch(e.target.value); setPage(1); }}
               className="h-10"
@@ -93,17 +100,6 @@ export default function EventAdminOrders() {
               <option value={6}>6 / page</option>
               <option value={10}>10 / page</option>
               <option value={25}>25 / page</option>
-            </select>
-
-            <select
-              value={statusFilter}
-              onChange={(e) => { setStatusFilter(e.target.value); setPage(1); }}
-              className="border rounded px-2 py-1 text-sm focus:outline-none"
-              aria-label="Filter status"
-            >
-              <option>All</option>
-              <option>Paid</option>
-              <option>Pending</option>
             </select>
           </div>
         </div>
@@ -145,24 +141,15 @@ export default function EventAdminOrders() {
             <tbody className="divide-y">
               {pageData.length === 0 ? (
                 <tr>
-                  <td colSpan={columns.length} className="px-3 py-6 text-center text-slate-500">No orders found.</td>
+                  <td colSpan={columns.length} className="px-3 py-6 text-center text-slate-500">No regions found.</td>
                 </tr>
               ) : (
                 pageData.map((row) => (
                   <tr key={row.id} className="hover:bg-slate-50 transition-colors">
-                    <td className="px-3 py-3">{row.code}</td>
                     <td className="px-3 py-3">{row.name}</td>
-                    <td className="px-3 py-3">{row.email}</td>
-                    <td className="px-3 py-3">{row.total}</td>
-                    <td className="px-3 py-3">
-                      {normalizeStatus(row.status) === 'Paid' ? (
-                        <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">Paid</span>
-                      ) : (
-                        <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">Pending</span>
-                      )}
-                    </td>
-                    <td className="px-3 py-3">{row.method}</td>
-                    <td className="px-3 py-3">{row.date}</td>
+                    <td className="px-3 py-3">{row.slug}</td>
+                    <td className="px-3 py-3">{row.events}</td>
+                    <td className="px-3 py-3">{row.createdAt}</td>
                   </tr>
                 ))
               )}
@@ -211,6 +198,27 @@ export default function EventAdminOrders() {
           </div>
         </div>
       </div>
+
+      <Dialog open={open} onOpenChange={setOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Add Wilayah</DialogTitle>
+          </DialogHeader>
+          <form onSubmit={handleAdd} className="space-y-4">
+            <div>
+              <label className="block text-sm mb-1">Nama Wilayah</label>
+              <Input value={name} onChange={(e) => setName(e.target.value)} />
+            </div>
+            <div>
+              <label className="block text-sm mb-1">Slug</label>
+              <Input value={slug} onChange={(e) => setSlug(e.target.value)} />
+            </div>
+            <div className="flex justify-end">
+              <Button type="submit">Save</Button>
+            </div>
+          </form>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

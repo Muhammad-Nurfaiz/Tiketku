@@ -1,43 +1,41 @@
 import React, { useState } from 'react';
+import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 
-const initial = Array.from({ length: 20 }).map((_, i) => ({
+const initial = Array.from({ length: 10 }).map((_, i) => ({
   id: i + 1,
-  code: `ORD-${1000 + i}`,
-  name: `Customer ${i + 1}`,
-  email: `user${i + 1}@example.com`,
-  total: `Rp ${Intl.NumberFormat('id-ID').format(50000 + i * 1000)}`,
-  status: i % 3 === 0 ? 'pending' : 'paid',
-  method: i % 2 === 0 ? 'Credit Card' : 'Bank Transfer',
-  date: `2025-12-${(i % 28) + 1}`,
+  name: `Regular ${i+1}`,
+  price: 50000 + i*5000,
+  quota: 100 + i*10,
+  sold: Math.floor(Math.random()*50),
+  maxOrder: 4,
+  status: i % 2 === 0 ? 'active' : 'inactive',
 }));
 
-export default function EventAdminOrders() {
-  const [data] = useState(initial);
+export default function TicketTypes() {
+  const [data, setData] = useState(initial);
   const [page, setPage] = useState(1);
   const [perPage, setPerPage] = useState(6);
   const [search, setSearch] = useState('');
-  const [statusFilter, setStatusFilter] = useState('All');
   const [sortKey, setSortKey] = useState(null);
   const [sortDir, setSortDir] = useState('asc');
+  const [open, setOpen] = useState(false);
+  const [form, setForm] = useState({ name: '', price: '', quota: '', maxOrder: '', period: '' });
 
   const columns = [
-    { key: 'code', label: 'Kode Order' },
-    { key: 'name', label: 'Nama Customer' },
-    { key: 'email', label: 'Email' },
-    { key: 'total', label: 'Total' },
+    { key: 'name', label: 'Nama Tiket' },
+    { key: 'price', label: 'Harga', render: (r) => `Rp ${Intl.NumberFormat('id-ID').format(r.price)}` },
+    { key: 'quota', label: 'Kuota Total' },
+    { key: 'sold', label: 'Terjual' },
+    { key: 'maxOrder', label: 'Max Order' },
     { key: 'status', label: 'Status' },
-    { key: 'method', label: 'Payment Method' },
-    { key: 'date', label: 'Tanggal' },
   ];
-
-  const normalizeStatus = (s) => (s === 'paid' ? 'Paid' : 'Pending');
 
   const filtered = data.filter((d) => {
     const q = search.trim().toLowerCase();
-    const matchesSearch = !q || [d.code, d.name, d.email, d.method, d.date].join(' ').toLowerCase().includes(q);
-    const matchesStatus = statusFilter === 'All' || normalizeStatus(d.status) === statusFilter;
-    return matchesSearch && matchesStatus;
+    const matchesSearch = !q || [d.name, `Rp ${Intl.NumberFormat('id-ID').format(d.price)}`, d.quota.toString(), d.sold.toString(), d.maxOrder.toString()].join(' ').toLowerCase().includes(q);
+    return matchesSearch;
   });
 
   const sorted = React.useMemo(() => {
@@ -68,15 +66,27 @@ export default function EventAdminOrders() {
     setSortDir((d) => (d === 'asc' ? 'desc' : 'asc'));
   }
 
+  function handleAdd(e) {
+    e.preventDefault();
+    const item = { id: data.length + 1, name: form.name, price: Number(form.price), quota: Number(form.quota), sold: 0, maxOrder: Number(form.maxOrder), status: 'active' };
+    setData([item, ...data]);
+    setOpen(false);
+    setForm({ name: '', price: '', quota: '', maxOrder: '', period: '' });
+    setPage(1);
+  }
+
   return (
     <div>
-      <h2 className="text-lg font-semibold mb-4">Orders</h2>
+      <div className="flex items-center justify-between mb-4">
+        <h2 className="text-lg font-semibold">Ticket Types</h2>
+        <Button onClick={() => setOpen(true)}>+ Add Ticket Type</Button>
+      </div>
 
       <div className="rounded-lg bg-white shadow-sm p-4">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
           <div className="flex items-center gap-2 w-full sm:w-1/2">
             <Input
-              placeholder="Search orders..."
+              placeholder="Search ticket types..."
               value={search}
               onChange={(e) => { setSearch(e.target.value); setPage(1); }}
               className="h-10"
@@ -93,17 +103,6 @@ export default function EventAdminOrders() {
               <option value={6}>6 / page</option>
               <option value={10}>10 / page</option>
               <option value={25}>25 / page</option>
-            </select>
-
-            <select
-              value={statusFilter}
-              onChange={(e) => { setStatusFilter(e.target.value); setPage(1); }}
-              className="border rounded px-2 py-1 text-sm focus:outline-none"
-              aria-label="Filter status"
-            >
-              <option>All</option>
-              <option>Paid</option>
-              <option>Pending</option>
             </select>
           </div>
         </div>
@@ -145,24 +144,23 @@ export default function EventAdminOrders() {
             <tbody className="divide-y">
               {pageData.length === 0 ? (
                 <tr>
-                  <td colSpan={columns.length} className="px-3 py-6 text-center text-slate-500">No orders found.</td>
+                  <td colSpan={columns.length} className="px-3 py-6 text-center text-slate-500">No ticket types found.</td>
                 </tr>
               ) : (
                 pageData.map((row) => (
                   <tr key={row.id} className="hover:bg-slate-50 transition-colors">
-                    <td className="px-3 py-3">{row.code}</td>
                     <td className="px-3 py-3">{row.name}</td>
-                    <td className="px-3 py-3">{row.email}</td>
-                    <td className="px-3 py-3">{row.total}</td>
+                    <td className="px-3 py-3">{`Rp ${Intl.NumberFormat('id-ID').format(row.price)}`}</td>
+                    <td className="px-3 py-3">{row.quota}</td>
+                    <td className="px-3 py-3">{row.sold}</td>
+                    <td className="px-3 py-3">{row.maxOrder}</td>
                     <td className="px-3 py-3">
-                      {normalizeStatus(row.status) === 'Paid' ? (
-                        <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">Paid</span>
+                      {row.status === 'active' ? (
+                        <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">Active</span>
                       ) : (
-                        <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">Pending</span>
+                        <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">Inactive</span>
                       )}
                     </td>
-                    <td className="px-3 py-3">{row.method}</td>
-                    <td className="px-3 py-3">{row.date}</td>
                   </tr>
                 ))
               )}
@@ -211,6 +209,35 @@ export default function EventAdminOrders() {
           </div>
         </div>
       </div>
+
+      <Dialog open={open} onOpenChange={setOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Add Ticket Type</DialogTitle>
+          </DialogHeader>
+          <form onSubmit={handleAdd} className="space-y-4">
+            <div>
+              <label className="block text-sm mb-1">Nama Tiket</label>
+              <Input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
+            </div>
+            <div>
+              <label className="block text-sm mb-1">Harga</label>
+              <Input value={form.price} onChange={(e) => setForm({ ...form, price: e.target.value })} />
+            </div>
+            <div>
+              <label className="block text-sm mb-1">Kuota</label>
+              <Input value={form.quota} onChange={(e) => setForm({ ...form, quota: e.target.value })} />
+            </div>
+            <div>
+              <label className="block text-sm mb-1">Max Order</label>
+              <Input value={form.maxOrder} onChange={(e) => setForm({ ...form, maxOrder: e.target.value })} />
+            </div>
+            <div className="flex justify-end">
+              <Button type="submit">Save</Button>
+            </div>
+          </form>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
