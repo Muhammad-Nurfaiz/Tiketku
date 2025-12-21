@@ -25,6 +25,7 @@ import EventAdminOrders from "./pages/eventadmin/Orders";
 import EventAdminTickets from "./pages/eventadmin/Tickets";
 import EventAdminScanStaff from "./pages/eventadmin/ScanStaff";
 import EventAdminSettings from "./pages/eventadmin/Settings";
+import AddEventForm from "./pages/eventadmin/addEvent";
 import Login from "./pages/Login";
 import NotFound from "./pages/NotFound";
 
