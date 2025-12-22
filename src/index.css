@@ -252,6 +252,15 @@
   .data-table tbody tr {
     @apply transition-colors hover:bg-muted/30;
   }
+
+  .toolbar-btn {
+    @apply px-2 py-1 rounded text-sm hover:bg-slate-100;
+  }
+
+  .toolbar-btn.active {
+    @apply bg-slate-200 font-semibold;
+  }
+
 }
 
 @layer utilities {
@@ -303,4 +312,6 @@
       transform: translateY(0);
     }
   }
+
+
 }
