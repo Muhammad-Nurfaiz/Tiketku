@@ -4,7 +4,7 @@ import { DataTable } from '@/components/common/DataTable';
 import { LoadingSpinner } from '@/components/common/LoadingSpinner';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { useToast } from '@/components/common/Toast';
+import { toast } from "sonner";
 import { Plus, Trash2, Upload } from 'lucide-react';
 import {
   Dialog,
@@ -52,7 +52,6 @@ export default function Banner() {
     imageUrl: '',
   });
   const [imagePreview, setImagePreview] = useState(null);
-  const { addToast } = useToast();
 
   const handleImageChange = (e) => {
     const file = e.target.files?.[0];
@@ -70,7 +69,7 @@ export default function Banner() {
     e.preventDefault();
     
     if (!formData.title.trim() || !formData.description.trim() || !formData.imageUrl) {
-      addToast('Semua field wajib diisi', 'error');
+      toast.error('Semua field wajib diisi', 'error');
       return;
     }
 
@@ -87,13 +86,13 @@ export default function Banner() {
       };
       
       setBanners([newBanner, ...banners]);
-      addToast('Banner berhasil ditambahkan', 'success');
+      toast.success('Banner berhasil ditambahkan', 'success');
       setUploadDialogOpen(false);
       setFormData({ title: '', description: '', imageUrl: '' });
       setImagePreview(null);
     } catch (error) {
       console.error('Failed to upload banner:', error);
-      addToast('Gagal menambahkan banner', 'error');
+      toast.error('Gagal menambahkan banner', 'error');
     } finally {
       setLoading(false);
     }
@@ -104,10 +103,10 @@ export default function Banner() {
     if (ok) {
       try {
         setBanners(banners.filter(b => b.id !== id));
-        addToast('Banner berhasil dihapus', 'success');
+        toast.success('Banner berhasil dihapus', 'success');
       } catch (error) {
         console.error('Failed to delete banner:', error);
-        addToast('Gagal menghapus banner', 'error');
+        toast.error('Gagal menghapus banner', 'error');
       }
     }
   };

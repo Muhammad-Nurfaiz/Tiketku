@@ -73,10 +73,17 @@ export function DropdownMenuContent({ children, align = 'end', className, style 
 
   return (
     <div
-      className={`absolute top-full mt-1 z-50 min-w-max bg-card border border-input rounded-md shadow-md ${alignClass} ${className || ''}`}
-      style={style}
+      className={`fixed md:absolute mt-1 z-50 min-w-max bg-white border border-input rounded-md shadow-md ${alignClass} ${className || ''}`}
+      style={{
+        // Tambahkan ini agar di layar besar dia tidak merusak layout
+        // tetapi di dalam scrollable area dia tetap melayang
+        boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
+        ...style
+      }}
     >
-      {children}
+      <div className="flex flex-col">
+        {children}
+      </div>
     </div>
   );
 }

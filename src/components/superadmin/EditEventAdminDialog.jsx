@@ -8,7 +8,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { useToast } from '@/components/common/Toast';
+import { toast } from 'sonner';
 import { updateEventAdmin } from '@/services/superadminApi';
 
 export function EditEventAdminDialog({ open, onOpenChange, admin, onSuccess }) {
@@ -20,7 +20,6 @@ export function EditEventAdminDialog({ open, onOpenChange, admin, onSuccess }) {
     status: 'active',
   });
   const [errors, setErrors] = useState({});
-  const { addToast } = useToast();
 
   useEffect(() => {
     if (admin && open) {
@@ -53,19 +52,19 @@ export function EditEventAdminDialog({ open, onOpenChange, admin, onSuccess }) {
     const newErrors = validateForm();
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors);
-      addToast('Mohon periksa form kembali', 'error');
+      toast.warning('Mohon periksa form kembali', 'error');
       return;
     }
 
     setLoading(true);
     try {
       await updateEventAdmin(admin.id, formData);
-      addToast('Event Admin berhasil diperbarui', 'success');
+      toast.success('Event Admin berhasil diperbarui', 'success');
       onOpenChange(false);
       onSuccess?.();
     } catch (error) {
       console.error('Failed to update admin:', error);
-      addToast('Gagal memperbarui Event Admin', 'error');
+      toast.error('Gagal memperbarui Event Admin', 'error');
     } finally {
       setLoading(false);
     }

@@ -1,6 +1,22 @@
 import React, { useState, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { 
+  Ellipsis,
+  SquarePen,
+  CalendarDays,
+  TicketSlash,
+  BookOpen,
+  Trash,
+} from 'lucide-react';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 
 const initial = Array.from({ length: 12 }).map((_, i) => ({
   id: i + 1,
@@ -67,7 +83,7 @@ export default function EventList({ onAdd }) {
         </div>
 
         {/* Table */}
-        <div className="overflow-x-auto">
+        <div className="overflow-x-auto pb-44 -mb-44">
           <table className="w-full text-sm divide-y">
             <thead>
               <tr className="text-left text-xs text-slate-500">
@@ -99,12 +115,44 @@ export default function EventList({ onAdd }) {
                     )}
                   </td>
                   <td className="px-3 py-3 text-right">
-                    <button className="p-2 rounded hover:bg-slate-100">
-                      ✏️
-                    </button>
-                    <button className="p-2 rounded hover:bg-slate-100 ml-1">
-                      🗑️
-                    </button>
+                      <div className="relative inline-block overflow-visible h-0">
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <button className="p-1 hover:bg-slate-100 rounded-full outline-none">
+                              <Ellipsis size={16} />
+                            </button>
+                          </DropdownMenuTrigger>
+                          
+                          <DropdownMenuContent 
+                            align="end" 
+                            className="w-48 bg-white border shadow-xl"
+                            style={{
+                              position: 'absolute',
+                              right: 0,
+                              top: '100%',
+                              zIndex: 9999
+                            }}
+                          >
+                            <DropdownMenuItem className="gap-2 p-2 cursor-pointer hover:bg-slate-50 text-left">
+                              <BookOpen size={16} className="text-blue-600"/>
+                              <span>Detail Event</span>
+                            </DropdownMenuItem>
+                            <DropdownMenuItem className="gap-2 p-2 cursor-pointer hover:bg-slate-50 text-left">
+                              <CalendarDays size={16} className="text-amber-500"/>
+                              <span>Update Event</span>
+                            </DropdownMenuItem>
+                            <DropdownMenuItem className="gap-2 p-2 cursor-pointer hover:bg-slate-50 text-left">
+                              <TicketSlash size={16} className="text-emerald-500"/>
+                              <span>Update Ticket</span>
+                            </DropdownMenuItem>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem className="gap-2 p-2 cursor-pointer text-red-600 hover:bg-red-50 text-left">
+                              <Trash size={16} />
+                              <span>Delete Event</span>
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </div>
                   </td>
                 </tr>
               ))}
@@ -125,14 +173,31 @@ export default function EventList({ onAdd }) {
               onClick={() => setPage((p) => p - 1)}
               className="p-2 rounded hover:bg-slate-100 disabled:opacity-40"
             >
-              ◀
+              <svg className="w-4 h-4 text-slate-600" viewBox="0 0 20 20" fill="currentColor">
+                <path d="M12.293 16.293L7.586 11.586 12.293 6.879 11.293 5.879 5.879 11.293 11.293 16.707z" />
+              </svg>
             </button>
+
+            <div className="hidden sm:flex items-center gap-1">
+              {Array.from({ length: totalPages }).map((_, i) => (
+                <button
+                  key={i}
+                  className={`px-2 py-1 rounded text-sm ${page === i + 1 ? 'bg-slate-100' : 'hover:bg-slate-50'}`}
+                  onClick={() => setPage(i + 1)}
+                >
+                  {i + 1}
+                </button>
+              ))}
+            </div>
+
             <button
               disabled={page === totalPages}
               onClick={() => setPage((p) => p + 1)}
               className="p-2 rounded hover:bg-slate-100 disabled:opacity-40"
             >
-              ▶
+              <svg className="w-4 h-4 text-slate-600" viewBox="0 0 20 20" fill="currentColor">
+                <path d="M7.707 3.707L12.414 8.414 7.707 13.121 8.707 14.121 14.121 8.707 8.707 3.293z" />
+              </svg>
             </button>
           </div>
         </div>

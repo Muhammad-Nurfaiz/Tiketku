@@ -155,6 +155,26 @@
   h1, h2, h3, h4, h5, h6 {
     @apply font-semibold tracking-tight;
   }
+
+  .ProseMirror {
+    outline: none !important;
+    border: none !important;
+    box-shadow: none !important;
+  }
+
+  .ProseMirror-focused {
+    outline: none !important;
+    border: none !important;
+    box-shadow: none !important;
+  }
+
+  /* Browser native contenteditable focus */
+  [contenteditable="true"]:focus,
+  [contenteditable="true"]:focus-visible {
+    outline: none !important;
+    border: none !important;
+    box-shadow: none !important;
+  }
 }
 
 @layer components {
@@ -261,6 +281,46 @@
     @apply bg-slate-200 font-semibold;
   }
 
+  .tiptap-editor ul {
+    list-style: disc;
+    padding-left: 1.5rem;
+  }
+
+  .tiptap-editor ol {
+    list-style: decimal;
+    padding-left: 1.5rem;
+  }
+
+  .tiptap-editor li {
+    margin: 0.25rem 0;
+  }
+
+  .tiptap-editor blockquote {
+    border-left: 4px solid #000000;
+    background: #e2e2e2;
+    padding: 0.3rem 1rem;
+    border-radius: 0.375rem;
+    color: #0f172a;
+  }
+
+  .tiptap-editor a {
+    color: #2563eb; /* blue-600 */
+    text-decoration: underline;
+    text-underline-offset: 2px;
+    font-weight: 500;
+  }
+
+  .tiptap-editor a:hover {
+    color: #1d4ed8; /* blue-700 */
+  }
+
+  .tiptap-editor img {
+    max-width: 70%;
+    height: auto;
+    border-radius: 0.375rem; /* rounded-md */
+    margin: 0.75rem 0;
+    display: block;
+  }
 }
 
 @layer utilities {
@@ -312,6 +372,4 @@
       transform: translateY(0);
     }
   }
-
-
 }

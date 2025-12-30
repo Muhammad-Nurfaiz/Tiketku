@@ -3,7 +3,7 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { PageHeader } from '@/components/common/PageHeader';
 import { useNavigate, useLocation, Navigate } from 'react-router-dom';
-import { useToast } from '@/components/common/Toast';
+import { toast } from 'sonner';
 import { useAuth } from '@/contexts/AuthContext';
 
 export default function Login() {
@@ -12,7 +12,6 @@ export default function Login() {
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
-  const { addToast } = useToast();
   const { login, isAuthenticated } = useAuth();
 
   // If already authenticated redirect to the original requested page (if any)
@@ -26,19 +25,19 @@ export default function Login() {
   const handleSubmit = async (e) => {
     e?.preventDefault();
     if (!email.trim() || !password) {
-      addToast('Email dan password wajib diisi', 'error');
+      toast.error('Email dan password wajib diisi', 'error');
       return;
     }
 
     setLoading(true);
     try {
       await login(email.trim(), password);
-      addToast('Login berhasil', 'success');
+      toast.success('Login berhasil');
       const from = location.state?.from?.pathname || '/dashboard';
       try { sessionStorage.setItem('lastInternalPath', from); } catch (e) {}
       navigate(from, { replace: true, state: { fromLogin: true } });
     } catch (err) {
-      addToast(err?.message || 'Gagal login', 'error');
+      toast.error(err?.message || 'Gagal login');
     } finally {
       setLoading(false);
     }

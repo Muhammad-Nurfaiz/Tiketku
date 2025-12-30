@@ -1,4 +1,13 @@
-import React from 'react';
-import { Toaster as Sonner } from 'sonner';
+import { Toaster } from "sonner";
 
-export { Sonner as Toaster };
+export function Sonner() {
+  return (
+    <Toaster
+      position="top-center"
+      richColors
+      closeButton
+      expand
+      duration={3000}
+    />
+  );
+}

@@ -8,7 +8,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { useToast } from '@/components/common/Toast';
+import { toast } from 'sonner';
 import { createEventAdmin } from '@/services/superadminApi';
 
 export function AddEventAdminDialog({ open, onOpenChange, onSuccess }) {
@@ -20,7 +20,6 @@ export function AddEventAdminDialog({ open, onOpenChange, onSuccess }) {
     status: 'active',
   });
   const [errors, setErrors] = useState({});
-  const { addToast } = useToast();
 
   const validateForm = () => {
     const newErrors = {};
@@ -41,14 +40,14 @@ export function AddEventAdminDialog({ open, onOpenChange, onSuccess }) {
     const newErrors = validateForm();
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors);
-      addToast('Mohon periksa form kembali', 'error');
+      toast.error('Mohon periksa form kembali', 'error');
       return;
     }
 
     setLoading(true);
     try {
       await createEventAdmin(formData);
-      addToast('Event Admin berhasil ditambahkan', 'success');
+      toast.success('Event Admin berhasil ditambahkan', 'success');
       setFormData({
         fullName: '',
         email: '',
@@ -60,7 +59,7 @@ export function AddEventAdminDialog({ open, onOpenChange, onSuccess }) {
       onSuccess?.();
     } catch (error) {
       console.error('Failed to create admin:', error);
-      addToast('Gagal menambahkan Event Admin', 'error');
+      toast.error('Gagal menambahkan Event Admin', 'error');
     } finally {
       setLoading(false);
     }

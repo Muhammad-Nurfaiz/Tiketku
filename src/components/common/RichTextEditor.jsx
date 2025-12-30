@@ -3,11 +3,38 @@ import StarterKit from "@tiptap/starter-kit";
 import Underline from "@tiptap/extension-underline";
 import Image from "@tiptap/extension-image";
 import Link from "@tiptap/extension-link";
+import BulletList from "@tiptap/extension-bullet-list";
+import OrderedList from "@tiptap/extension-ordered-list";
+import ListItem from "@tiptap/extension-list-item";
+import {
+  Bold,
+  Italic,
+  Underline as UnderlineIcon,
+  Heading1,
+  Heading2,
+  Heading3,
+  Heading4,
+  Heading5,
+  Quote,
+  List,
+  ListOrdered,
+  Link as LinkIcon,
+  Image as ImageIcon,
+  Undo,
+  Redo,
+} from "lucide-react";
 
-export default function RichTextEditor({ value, onChange }) {
+export default function RichTextEditor({ value = "", onChange }) {
   const editor = useEditor({
     extensions: [
       StarterKit,
+
+      ListItem.configure({
+        keepMarks: true,
+        keepAttributes: false,
+      }),
+
+
       Underline,
       Image,
       Link.configure({
@@ -23,6 +50,7 @@ export default function RichTextEditor({ value, onChange }) {
   if (!editor) return null;
 
   function addImage(file) {
+    if (!file) return;
     const reader = new FileReader();
     reader.onload = () => {
       editor.chain().focus().setImage({ src: reader.result }).run();
@@ -31,97 +59,72 @@ export default function RichTextEditor({ value, onChange }) {
   }
 
   return (
-    <div className="border rounded-md bg-white">
+    <div
+      className="border rounded-md bg-white"
+      onClick={() => editor.chain().focus().run()} // ✅ klik area mana saja → fokus
+    >
       {/* TOOLBAR */}
       <div className="flex flex-wrap items-center gap-1 border-b p-2">
-        {/* Bold */}
-        <button
-          onClick={() => editor.chain().focus().toggleBold().run()}
-          className={`toolbar-btn ${editor.isActive("bold") && "active"}`}
-        >
-          <strong>B</strong>
-        </button>
+        <ToolbarButton onClick={() => editor.chain().focus().toggleBold().run()} active={editor.isActive("bold")}>
+          <Bold size={16} />
+        </ToolbarButton>
 
-        {/* Italic */}
-        <button
-          onClick={() => editor.chain().focus().toggleItalic().run()}
-          className={`toolbar-btn ${editor.isActive("italic") && "active"}`}
-        >
-          <em>I</em>
-        </button>
+        <ToolbarButton onClick={() => editor.chain().focus().toggleItalic().run()} active={editor.isActive("italic")}>
+          <Italic size={16} />
+        </ToolbarButton>
 
-        {/* Underline */}
-        <button
-          onClick={() => editor.chain().focus().toggleUnderline().run()}
-          className={`toolbar-btn ${editor.isActive("underline") && "active"}`}
-        >
-          <u>U</u>
-        </button>
+        <ToolbarButton onClick={() => editor.chain().focus().toggleUnderline().run()} active={editor.isActive("underline")}>
+          <UnderlineIcon size={16} />
+        </ToolbarButton>
 
-        <span className="mx-2 text-slate-300">|</span>
+        <Divider />
 
-        {/* Headings */}
         {[1, 2, 3, 4, 5].map((l) => (
-          <button
+          <ToolbarButton
             key={l}
-            onClick={() =>
-              editor.chain().focus().toggleHeading({ level: l }).run()
-            }
-            className={`toolbar-btn ${
-              editor.isActive("heading", { level: l }) && "active"
-            }`}
+            onClick={() => editor.chain().focus().toggleHeading({ level: l }).run()}
+            active={editor.isActive("heading", { level: l })}
           >
-            H{l}
-          </button>
+            {l === 1 && <Heading1 size={16} />}
+            {l === 2 && <Heading2 size={16} />}
+            {l === 3 && <Heading3 size={16} />}
+            {l === 4 && <Heading4 size={16} />}
+            {l === 5 && <Heading5 size={16} />}
+          </ToolbarButton>
         ))}
 
-        {/* Blockquote */}
-        <button
-          onClick={() => editor.chain().focus().toggleBlockquote().run()}
-          className={`toolbar-btn ${editor.isActive("blockquote") && "active"}`}
-        >
-          ❝
-        </button>
+        <ToolbarButton onClick={() => editor.chain().focus().toggleBlockquote().run()} active={editor.isActive("blockquote")}>
+          <Quote size={16} />
+        </ToolbarButton>
 
-        <span className="mx-2 text-slate-300">|</span>
+        <Divider />
 
-        {/* Bullet List */}
-        <button
-          onClick={() => editor.chain().focus().toggleBulletList().run()}
-          className={`toolbar-btn ${
-            editor.isActive("bulletList") && "active"
-          }`}
-        >
-          ••
-        </button>
+        <ToolbarButton 
+          onClick={() => editor.chain().focus().toggleBulletList().run()} 
+          active={editor.isActive("bulletList")}>
+          <List size={16} />
+        </ToolbarButton>
 
-        {/* Ordered List */}
-        <button
-          onClick={() => editor.chain().focus().toggleOrderedList().run()}
-          className={`toolbar-btn ${
-            editor.isActive("orderedList") && "active"
-          }`}
-        >
-          1.
-        </button>
+        <ToolbarButton 
+          onClick={() => editor.chain().focus().toggleOrderedList().run()} 
+          active={editor.isActive("orderedList")}>
+          <ListOrdered size={16} />
+        </ToolbarButton>
 
-        <span className="mx-2 text-slate-300">|</span>
+        <Divider />
 
-        {/* Link */}
-        <button
+        <ToolbarButton
           onClick={() => {
             const url = prompt("Masukkan URL");
-            if (url)
-              editor.chain().focus().setLink({ href: url }).run();
+            if (url) editor.chain().focus().setLink({ href: url }).run();
           }}
-          className={`toolbar-btn ${editor.isActive("link") && "active"}`}
+          active={editor.isActive("link")}
         >
-          🔗
-        </button>
+          <LinkIcon size={16} />
+        </ToolbarButton>
 
-        {/* Upload Image */}
         <label className="toolbar-btn cursor-pointer">
-          🖼
+          <ImageIcon size={16} />
           <input
             type="file"
             accept="image/*"
@@ -130,30 +133,47 @@ export default function RichTextEditor({ value, onChange }) {
           />
         </label>
 
-        <span className="mx-2 text-slate-300">|</span>
+        <Divider />
 
-        {/* Undo */}
-        <button
-          onClick={() => editor.chain().focus().undo().run()}
-          className="toolbar-btn"
-        >
-          ↺
-        </button>
+        <ToolbarButton onClick={() => editor.chain().focus().undo().run()}>
+          <Undo size={16} />
+        </ToolbarButton>
 
-        {/* Redo */}
-        <button
-          onClick={() => editor.chain().focus().redo().run()}
-          className="toolbar-btn"
-        >
-          ↻
-        </button>
+        <ToolbarButton onClick={() => editor.chain().focus().redo().run()}>
+          <Redo size={16} />
+        </ToolbarButton>
       </div>
 
-      {/* EDITOR */}
-      <EditorContent
-        editor={editor}
-        className="p-4 min-h-[180px] prose max-w-none"
-      />
+      <div
+        className="cursor-text"
+        onClick={() => editor.commands.focus()}
+      >
+        <EditorContent
+          editor={editor}
+          className="tiptap-editor p-4 min-h-[180px] prose max-w-none"
+        />
+      </div>
+
     </div>
   );
+}
+
+/* ================== */
+/* SMALL COMPONENTS */
+/* ================== */
+
+function ToolbarButton({ children, onClick, active }) {
+  return (
+    <button
+      onClick={onClick}
+      type="button"
+      className={`toolbar-btn ${active ? "bg-slate-200" : ""}`}
+    >
+      {children}
+    </button>
+  );
+}
+
+function Divider() {
+  return <span className="mx-2 text-slate-300">|</span>;
 }

@@ -6,7 +6,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 const initialRegions = Array.from({ length: 10 }).map((_, i) => ({
   id: i + 1,
   name: `Wilayah ${i + 1}`,
-  slug: `wilayah-${i + 1}`,
+  deskripsi: `halo-${i + 1}`,
   events: Math.floor(Math.random() * 8),
   createdAt: `2025-11-${(i % 28) + 1}`,
 }));
@@ -20,18 +20,18 @@ export default function Regions() {
   const [sortDir, setSortDir] = useState('asc');
   const [open, setOpen] = useState(false);
   const [name, setName] = useState('');
-  const [slug, setSlug] = useState('');
+  const [desc, setDesc] = useState('');
 
   const columns = [
     { key: 'name', label: 'Nama Wilayah' },
-    { key: 'slug', label: 'Slug' },
+    { key: 'deskripsi', label: 'Deskripsi' },
     { key: 'events', label: 'Jumlah Event' },
     { key: 'createdAt', label: 'Tanggal Dibuat' },
   ];
 
   const filtered = data.filter((d) => {
     const q = search.trim().toLowerCase();
-    const matchesSearch = !q || [d.name, d.slug, d.events.toString(), d.createdAt].join(' ').toLowerCase().includes(q);
+    const matchesSearch = !q || [d.name, d.deskripsi, d.events.toString(), d.createdAt].join(' ').toLowerCase().includes(q);
     return matchesSearch;
   });
 
@@ -65,10 +65,10 @@ export default function Regions() {
 
   function handleAdd(e) {
     e.preventDefault();
-    const item = { id: data.length + 1, name, slug, events: 0, createdAt: new Date().toISOString().slice(0, 10) };
+    const item = { id: data.length + 1, name, desc, events: 0, createdAt: new Date().toISOString().slice(0, 10) };
     setData([item, ...data]);
     setOpen(false);
-    setName(''); setSlug('');
+    setName(''); setDesc('');
     setPage(1);
   }
 
@@ -147,7 +147,7 @@ export default function Regions() {
                 pageData.map((row) => (
                   <tr key={row.id} className="hover:bg-slate-50 transition-colors">
                     <td className="px-3 py-3">{row.name}</td>
-                    <td className="px-3 py-3">{row.slug}</td>
+                    <td className="px-3 py-3">{row.deskripsi}</td>
                     <td className="px-3 py-3">{row.events}</td>
                     <td className="px-3 py-3">{row.createdAt}</td>
                   </tr>
@@ -210,8 +210,8 @@ export default function Regions() {
               <Input value={name} onChange={(e) => setName(e.target.value)} />
             </div>
             <div>
-              <label className="block text-sm mb-1">Slug</label>
-              <Input value={slug} onChange={(e) => setSlug(e.target.value)} />
+              <label className="block text-sm mb-1">Deskripsi</label>
+              <Input value={desc} onChange={(e) => setDesc(e.target.value)} />
             </div>
             <div className="flex justify-end">
               <Button type="submit">Save</Button>

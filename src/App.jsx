@@ -1,7 +1,5 @@
-import { Toaster } from "@/components/ui/toaster";
-import { Toaster as Sonner } from "@/components/ui/sonner";
+import { Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import { ToastProvider } from "@/components/common/Toast";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { AuthProvider } from '@/contexts/AuthContext';
 import RequireAuth from '@/components/common/RequireAuth';
@@ -25,7 +23,6 @@ import EventAdminOrders from "./pages/eventadmin/Orders";
 import EventAdminTickets from "./pages/eventadmin/Tickets";
 import EventAdminScanStaff from "./pages/eventadmin/ScanStaff";
 import EventAdminSettings from "./pages/eventadmin/Settings";
-import AddEventForm from "./pages/eventadmin/addEvent";
 import Login from "./pages/Login";
 import NotFound from "./pages/NotFound";
 
@@ -34,9 +31,7 @@ const queryClient = new QueryClient();
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <AuthProvider>
-      <ToastProvider>
         <TooltipProvider>
-          <Toaster />
           <Sonner />
           <BrowserRouter>
             <Routes>
@@ -95,7 +90,6 @@ const App = () => (
             </Routes>
           </BrowserRouter>
         </TooltipProvider>
-      </ToastProvider>
     </AuthProvider>
   </QueryClientProvider>
 );

@@ -8,7 +8,7 @@ import { getEventAdmins, deleteEventAdmin } from '@/services/superadminApi';
 import { Plus, Trash2, Edit } from 'lucide-react';
 import { AddEventAdminDialog } from '@/components/superadmin/AddEventAdminDialog';
 import { EditEventAdminDialog } from '@/components/superadmin/EditEventAdminDialog';
-import { useToast } from '@/components/common/Toast';
+import { toast } from 'sonner';
 
 export default function EventAdmins() {
   const [admins, setAdmins] = useState([]);
@@ -18,7 +18,6 @@ export default function EventAdmins() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [selectedAdmin, setSelectedAdmin] = useState(null);
-  const { addToast } = useToast();
 
   useEffect(() => {
     fetchAdmins();
@@ -42,10 +41,10 @@ export default function EventAdmins() {
       try {
         await deleteEventAdmin(id);
         setAdmins(admins.filter(admin => admin.id !== id));
-        addToast('Event Admin berhasil dihapus', 'success');
+        toast.success('Event Admin berhasil dihapus', 'success');
       } catch (error) {
         console.error('Failed to delete admin:', error);
-        addToast('Gagal menghapus Event Admin', 'error');
+        toast.error('Gagal menghapus Event Admin', 'error');
       }
     }
   }

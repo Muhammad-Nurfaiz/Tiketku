@@ -31,6 +31,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { confirmLogout } from "@/lib/alert";
 
 const pageNames = {
   '/dashboard': 'Dashboard',
@@ -206,10 +207,17 @@ export function AppLayout() {
                     <DropdownMenuSeparator />
                     <DropdownMenuItem
                       className="gap-2"
-                      onClick={() => {
-                        try { sessionStorage.removeItem('lastInternalPath'); } catch (e) {}
+                      onClick={async () => {
+                        const result = await confirmLogout();
+
+                        if (!result.isConfirmed) return;
+
+                        try {
+                          sessionStorage.removeItem("lastInternalPath");
+                        } catch (e) {}
+
                         logout();
-                        navigate('/login');
+                        navigate("/login");
                       }}
                     >
                       <LogOut className="h-4 w-4" /> Logout
