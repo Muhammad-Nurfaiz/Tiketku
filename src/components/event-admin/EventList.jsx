@@ -17,6 +17,9 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { useNavigate } from "react-router-dom";
+import { confirmAlert, successAlert } from "@/lib/alert";
+
 
 const initial = Array.from({ length: 12 }).map((_, i) => ({
   id: i + 1,
@@ -35,6 +38,8 @@ export default function EventList({ onAdd }) {
   const [perPage, setPerPage] = useState(6);
   const [search, setSearch] = useState("");
 
+  const navigate = useNavigate();
+
   const filtered = useMemo(() => {
     return data.filter((d) =>
       [d.name, d.venue].join(" ").toLowerCase().includes(search.toLowerCase())
@@ -45,6 +50,57 @@ export default function EventList({ onAdd }) {
   const pageData = filtered.slice((page - 1) * perPage, page * perPage);
 
   const normalizeStatus = (s) => (s === "published" ? "Active" : "Inactive");
+
+  function handleDetail(row) {
+    navigate(`/events/${row.id}`);
+  }
+
+  async function handleUpdateEvent(row) {
+    const res = await confirmAlert({
+      title: "Update Event?",
+      text: "Anda akan mengubah data event ini.",
+      confirmText: "Lanjutkan",
+    });
+
+    if (!res.isConfirmed) return;
+
+    navigate(`/events/${row.id}/edit`);
+  }
+
+
+  async function handleUpdateTicket(row) {
+    const res = await confirmAlert({
+      title: "Update Ticket?",
+      text: "Anda akan mengubah data ticket event ini.",
+      confirmText: "Lanjutkan",
+    });
+
+    if (!res.isConfirmed) return;
+
+    navigate(`/events/${row.id}/tickets`);
+  }
+
+  async function handleDelete(row) {
+    const res = await confirmAlert({
+      title: "Hapus Event?",
+      text: `Event "${row.name}" akan dihapus permanen.`,
+      confirmText: "Hapus",
+      cancelText: "Batal",
+      icon: "error",
+    });
+
+    if (!res.isConfirmed) return;
+
+    // TODO: panggil API delete
+    // await deleteEvent(row.id);
+
+    await successAlert(
+      "Event dihapus",
+      "Event berhasil dihapus."
+    );
+  }
+
+
 
   return (
     <div>
@@ -133,20 +189,20 @@ export default function EventList({ onAdd }) {
                               zIndex: 9999
                             }}
                           >
-                            <DropdownMenuItem className="gap-2 p-2 cursor-pointer hover:bg-slate-50 text-left">
+                            <DropdownMenuItem onClick={()=> handleDetail(row)} className="gap-2 p-2 cursor-pointer hover:bg-slate-50 text-left">
                               <BookOpen size={16} className="text-blue-600"/>
                               <span>Detail Event</span>
                             </DropdownMenuItem>
-                            <DropdownMenuItem className="gap-2 p-2 cursor-pointer hover:bg-slate-50 text-left">
+                            <DropdownMenuItem onClick={()=> handleUpdateEvent(row)} className="gap-2 p-2 cursor-pointer hover:bg-slate-50 text-left">
                               <CalendarDays size={16} className="text-amber-500"/>
                               <span>Update Event</span>
                             </DropdownMenuItem>
-                            <DropdownMenuItem className="gap-2 p-2 cursor-pointer hover:bg-slate-50 text-left">
+                            <DropdownMenuItem onClick={()=> handleUpdateTicket(row)} className="gap-2 p-2 cursor-pointer hover:bg-slate-50 text-left">
                               <TicketSlash size={16} className="text-emerald-500"/>
                               <span>Update Ticket</span>
                             </DropdownMenuItem>
                             <DropdownMenuSeparator />
-                            <DropdownMenuItem className="gap-2 p-2 cursor-pointer text-red-600 hover:bg-red-50 text-left">
+                            <DropdownMenuItem onClick={()=> handleDelete(row)} className="gap-2 p-2 cursor-pointer text-red-600 hover:bg-red-50 text-left">
                               <Trash size={16} />
                               <span>Delete Event</span>
                             </DropdownMenuItem>
