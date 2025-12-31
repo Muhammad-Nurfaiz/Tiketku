@@ -19,6 +19,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { useNavigate } from "react-router-dom";
 import { confirmAlert, successAlert } from "@/lib/alert";
+import EventActionDialog from "./EventActionDialog";
 
 
 const initial = Array.from({ length: 12 }).map((_, i) => ({
@@ -51,34 +52,24 @@ export default function EventList({ onAdd }) {
 
   const normalizeStatus = (s) => (s === "published" ? "Active" : "Inactive");
 
-  function handleDetail(row) {
-    navigate(`/events/${row.id}`);
-  }
+  const [dialog, setDialog] = useState({
+    open: false,
+    mode: null, // 'detail' | 'update-event' | 'update-ticket'
+    data: null,
+  });
 
-  async function handleUpdateEvent(row) {
-    const res = await confirmAlert({
-      title: "Update Event?",
-      text: "Anda akan mengubah data event ini.",
-      confirmText: "Lanjutkan",
+  function openDialog(mode, row) {
+    setDialog({
+      open: true,
+      mode,
+      data: row,
     });
-
-    if (!res.isConfirmed) return;
-
-    navigate(`/events/${row.id}/edit`);
   }
 
-
-  async function handleUpdateTicket(row) {
-    const res = await confirmAlert({
-      title: "Update Ticket?",
-      text: "Anda akan mengubah data ticket event ini.",
-      confirmText: "Lanjutkan",
-    });
-
-    if (!res.isConfirmed) return;
-
-    navigate(`/events/${row.id}/tickets`);
+  function closeDialog() {
+    setDialog({ open: false, mode: null, data: null });
   }
+
 
   async function handleDelete(row) {
     const res = await confirmAlert({
@@ -189,15 +180,15 @@ export default function EventList({ onAdd }) {
                               zIndex: 9999
                             }}
                           >
-                            <DropdownMenuItem onClick={()=> handleDetail(row)} className="gap-2 p-2 cursor-pointer hover:bg-slate-50 text-left">
+                            <DropdownMenuItem onClick={()=> openDialog("detail",row)} className="gap-2 p-2 cursor-pointer hover:bg-slate-50 text-left">
                               <BookOpen size={16} className="text-blue-600"/>
                               <span>Detail Event</span>
                             </DropdownMenuItem>
-                            <DropdownMenuItem onClick={()=> handleUpdateEvent(row)} className="gap-2 p-2 cursor-pointer hover:bg-slate-50 text-left">
+                            <DropdownMenuItem onClick={()=> openDialog("update-event",row)} className="gap-2 p-2 cursor-pointer hover:bg-slate-50 text-left">
                               <CalendarDays size={16} className="text-amber-500"/>
                               <span>Update Event</span>
                             </DropdownMenuItem>
-                            <DropdownMenuItem onClick={()=> handleUpdateTicket(row)} className="gap-2 p-2 cursor-pointer hover:bg-slate-50 text-left">
+                            <DropdownMenuItem onClick={()=> openDialog("update-ticket",row)} className="gap-2 p-2 cursor-pointer hover:bg-slate-50 text-left">
                               <TicketSlash size={16} className="text-emerald-500"/>
                               <span>Update Ticket</span>
                             </DropdownMenuItem>
@@ -258,6 +249,12 @@ export default function EventList({ onAdd }) {
           </div>
         </div>
       </div>
+          <EventActionDialog
+            open={dialog.open}
+            mode={dialog.mode}
+            data={dialog.data}
+            onClose={closeDialog}
+          />
     </div>
   );
 }

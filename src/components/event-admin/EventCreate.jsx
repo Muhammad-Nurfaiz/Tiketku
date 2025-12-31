@@ -79,6 +79,7 @@ export default function EventCreate({ onCancel }) {
             }))
           }
           onNext={() => setStep(2)}
+          onCancel={onCancel}
         />
       )}
 
@@ -88,7 +89,7 @@ export default function EventCreate({ onCancel }) {
           setTickets={setTickets}
           activeTicketId={activeTicketId}
           setActiveTicketId={setActiveTicketId}
-          onBackStep={() => setStep(2)}
+          onBackStep={() => setStep(1)}
           onFinish={handleFinish}
         />
       )}

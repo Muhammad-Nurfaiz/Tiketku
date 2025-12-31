@@ -2,6 +2,10 @@ import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import RichTextEditor from '@/components/common/RichTextEditor';
+import TagInput from '@/components/ui/tagsinput';
+import { confirmAlert, successAlert } from "@/lib/alert";
+import { Edit } from 'lucide-react';
 
 const initialRegions = Array.from({ length: 10 }).map((_, i) => ({
   id: i + 1,
@@ -21,6 +25,11 @@ export default function Regions() {
   const [open, setOpen] = useState(false);
   const [name, setName] = useState('');
   const [desc, setDesc] = useState('');
+  const [imgFile, setImgFile] = useState(null);
+  const [imgPreview, setImgPreview] = useState('');
+  const [keywords, setKeywords] = useState([]);
+  const [errors, setErrors] = useState({});
+  const [editingId, setEditingId] = useState(null);
 
   const columns = [
     { key: 'name', label: 'Nama Wilayah' },
@@ -63,14 +72,128 @@ export default function Regions() {
     setSortDir((d) => (d === 'asc' ? 'desc' : 'asc'));
   }
 
-  function handleAdd(e) {
+  const handleEdit = (row) => {
+    setEditingId(row.id);
+    setName(row.name);
+    setDesc(row.deskripsi);
+    setKeywords(row.keywords || []);
+    setImgPreview(row.imgUrl || ''); // Asumsi ada field imgUrl
+    setOpen(true);
+  };
+
+async function handleSave(e) {
     e.preventDefault();
-    const item = { id: data.length + 1, name, desc, events: 0, createdAt: new Date().toISOString().slice(0, 10) };
-    setData([item, ...data]);
-    setOpen(false);
-    setName(''); setDesc('');
-    setPage(1);
+    const newErrors = {};
+
+    if (!name.trim()) newErrors.name = "Nama wilayah wajib diisi.";
+    if (!desc.trim() || desc === "<p></p>") newErrors.desc = "Deskripsi wajib diisi.";
+    // Saat edit, gambar boleh tidak diupload ulang jika sudah ada preview sebelumnya
+    if (!imgFile && !imgPreview) newErrors.img = "Gambar wajib diunggah.";
+    if (keywords.length === 0) newErrors.keywords = "Minimal harus ada 1 keyword.";
+
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors);
+      return;
+    }
+
+    if (editingId) {
+      // LOGIKA UPDATE
+      const updatedData = data.map((item) => 
+        item.id === editingId 
+          ? { ...item, name, deskripsi: desc.replace(/<[^>]*>/g, ''), keywords } 
+          : item
+      );
+      setData(updatedData);
+      await successAlert("Berhasil", "Data Wilayah telah diperbarui.");
+    } else {
+      // LOGIKA ADD (Sama seperti sebelumnya)
+      const newItem = { 
+        id: data.length + 1, 
+        name, 
+        deskripsi: desc.replace(/<[^>]*>/g, ''),
+        keywords,
+        events: 0, 
+        createdAt: new Date().toISOString().slice(0, 10) 
+      };
+      setData([newItem, ...data]);
+      await successAlert("Berhasil", "Regions Baru ditambah.");
+    }
+
+    closeDialog();
   }
+
+  const closeDialog = () => {
+    setOpen(false);
+    setEditingId(null); // Reset mode ke Add
+    setName('');
+    setDesc('');
+    setImgFile(null);
+    setImgPreview('');
+    setKeywords([]);
+    setErrors({});
+  };
+
+  async function handleCancel() {
+    // Tentukan pesan berdasarkan mode (Edit atau Add)
+    const alertConfig = editingId 
+      ? {
+          title: "Batalkan Perubahan?",
+          text: "Perubahan yang Anda buat pada wilayah ini tidak akan disimpan.",
+          confirmText: "Ya, Batalkan Edit",
+        }
+      : {
+          title: "Batal Tambah Wilayah?",
+          text: "Data wilayah yang Anda masukkan tidak akan disimpan.",
+          confirmText: "Ya, Batal",
+        };
+
+    const res = await confirmAlert({
+      title: alertConfig.title,
+      text: alertConfig.text,
+      confirmText: alertConfig.confirmText,
+    });
+
+    if (res.isConfirmed) {
+      closeDialog();
+    }
+  }
+
+  // Untuk Nama
+  const handleNameChange = (e) => {
+    setName(e.target.value);
+    if (errors.name) {
+      setErrors((prev) => ({ ...prev, name: null }));
+    }
+  };
+
+  // Untuk Deskripsi (RichTextEditor)
+  const handleDescChange = (val) => {
+    setDesc(val);
+    if (errors.desc) {
+      setErrors((prev) => ({ ...prev, desc: null }));
+    }
+  };
+
+  // Update handleImageChange yang sudah ada
+  const handleImageChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setImgFile(file);
+      const previewUrl = URL.createObjectURL(file);
+      setImgPreview(previewUrl);
+      
+      // Hapus error gambar jika ada
+      if (errors.img) {
+        setErrors((prev) => ({ ...prev, img: null }));
+      }
+    }
+  };
+
+  React.useEffect(() => {
+    if (keywords.length > 0 && errors.keywords) {
+      setErrors((prev) => ({ ...prev, keywords: null }));
+    }
+  }, [keywords, errors.keywords]);
 
   return (
     <div>
@@ -136,6 +259,7 @@ export default function Regions() {
                     </button>
                   </th>
                 ))}
+                <th className="px-3 py-2 text-right">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y">
@@ -150,6 +274,17 @@ export default function Regions() {
                     <td className="px-3 py-3">{row.deskripsi}</td>
                     <td className="px-3 py-3">{row.events}</td>
                     <td className="px-3 py-3">{row.createdAt}</td>
+                    <td className="px-3 py-3 text-right">
+                      <Button 
+                        variant="ghost" 
+                        size="sm" 
+                        onClick={() => handleEdit(row)}
+                        className="text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+                      >
+                        <Edit size={16} className="mr-1" />
+                        Edit
+                      </Button>
+                    </td>
                   </tr>
                 ))
               )}
@@ -199,22 +334,95 @@ export default function Regions() {
         </div>
       </div>
 
-      <Dialog open={open} onOpenChange={setOpen}>
+      <Dialog open={open} onOpenChange={(val) => {
+        // Jika mencoba menutup dengan klik luar/esc, arahkan ke handleCancel
+        if (!val) {
+          handleCancel();
+        } else {
+          setOpen(true);
+        }
+      }}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Add Wilayah</DialogTitle>
+            <DialogTitle>{editingId ? 'Edit Wilayah' : 'Add Wilayah'}</DialogTitle>
           </DialogHeader>
-          <form onSubmit={handleAdd} className="space-y-4">
+          <form onSubmit={handleSave} className="space-y-4">
             <div>
-              <label className="block text-sm mb-1">Nama Wilayah</label>
-              <Input value={name} onChange={(e) => setName(e.target.value)} />
+              <label className="block text-sm mb-1">Nama Wilayah <span className="text-red-500">*</span></label>
+              <Input 
+                value={name} 
+                onChange={handleNameChange}
+                className={errors.name ? "border-red-500 focus-visible:ring-red-500" : ""}
+              />
+              {errors.name && <p className="text-xs text-red-500 mt-1">{errors.name}</p>}
             </div>
             <div>
-              <label className="block text-sm mb-1">Deskripsi</label>
-              <Input value={desc} onChange={(e) => setDesc(e.target.value)} />
+              <label className="text-sm font-medium">Deskripsi <span className="text-red-500">*</span></label>
+              <div className={`border rounded-md mt-1 ${errors.desc ? "border-red-500" : ""}`}>
+                <RichTextEditor
+                  value={desc}
+                  onChange={handleDescChange}
+                  className="min-h-[120px] max-h-60 overflow-y-auto"
+                />
+              </div>
+              {errors.desc && <p className="text-xs text-red-500 mt-1">{errors.desc}</p>}
             </div>
-            <div className="flex justify-end">
-              <Button type="submit">Save</Button>
+            <div className="w-full">
+              <label className="text-sm font-medium">Gambar <span className="text-red-500">*</span></label>
+                <div className="mt-1">
+                  <label 
+                    className={`flex flex-col h-40 border-2 border-dashed rounded-lg items-center justify-center cursor-pointer transition-colors overflow-hidden 
+                      ${errors.img ? 'border-red-500 bg-red-50' : imgPreview ? 'border-primary' : 'border-slate-300 hover:bg-slate-50'}`}
+                    >
+                    {imgPreview ? (
+                      <img 
+                        src={imgPreview} 
+                        alt="Preview" 
+                        className="max-h-full object-contain" 
+                      />
+                      ) : (
+                      <div className="flex flex-col items-center">
+                        <svg className="w-8 h-8 text-slate-400 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4" />
+                        </svg>
+                        <span className="text-sm text-slate-500">Upload Gambar</span>
+                      </div>
+                      )}
+                      <Input 
+                        type="file" 
+                        className="hidden" 
+                        accept="image/*" 
+                        onChange={handleImageChange} 
+                      />
+                  </label>
+              </div>
+              {errors.img && <p className="text-xs text-red-500 mt-1">{errors.img}</p>}
+            </div>
+            <div>
+              <label className="text-sm font-medium">Keywords <span className="text-red-500">*</span></label>
+              <TagInput
+                keywords={keywords}
+                maxKeywords={20}
+                setKeywords={setKeywords}
+                error={!!errors.keywords}
+              />
+              {errors.keywords && <p className="text-xs text-red-500 mt-1">{errors.keywords}</p>}            
+            </div>
+            <div className="flex justify-end gap-3 pt-4 border-t">
+              <Button 
+                type="button" 
+                variant="outline" 
+                onClick={handleCancel}
+                className="w-full sm:w-auto"
+              >
+                Batal
+              </Button>
+              <Button 
+                type="submit" 
+                className="w-full sm:w-auto"
+              >
+                {editingId ? 'Simpan Perubahan' : 'Simpan Regions'}
+              </Button>
             </div>
           </form>
         </DialogContent>

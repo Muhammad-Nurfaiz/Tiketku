@@ -97,9 +97,20 @@ export function DropdownMenuSeparator({ className }) {
 }
 
 export function DropdownMenuItem({ children, onClick, className, ...props }) {
+  const ctx = useContext(DropdownContext);
+  if (!ctx) return null;
+
+  const { setOpen } = ctx;
+
+  const handleClick = (e) => {
+    e.stopPropagation();      // ⛔ cegah bubbling
+    setOpen(false);           // 🔥 TUTUP DROPDOWN
+    onClick?.(e);             // jalankan aksi (open dialog, dll)
+  };
+
   return (
     <button
-      onClick={onClick}
+      onClick={handleClick}
       className={`w-full text-left px-3 py-2 hover:bg-muted text-sm flex items-center ${className || ''}`}
       {...props}
     >

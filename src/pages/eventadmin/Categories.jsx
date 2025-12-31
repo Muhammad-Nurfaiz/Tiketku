@@ -1,7 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import RichTextEditor from "@/components/common/RichTextEditor";
+import { Edit } from 'lucide-react'; // Hanya import icon Edit
+import { confirmAlert, successAlert } from "@/lib/alert";
 
 const initialCategories = Array.from({ length: 14 }).map((_, i) => ({
   id: i + 1,
@@ -18,9 +21,15 @@ export default function Categories() {
   const [search, setSearch] = useState('');
   const [sortKey, setSortKey] = useState(null);
   const [sortDir, setSortDir] = useState('asc');
+  
+  // State Form & Dialog
   const [open, setOpen] = useState(false);
+  const [editingId, setEditingId] = useState(null);
   const [name, setName] = useState('');
   const [desc, setDesc] = useState('');
+  const [imgFile, setImgFile] = useState(null);
+  const [imgPreview, setImgPreview] = useState('');
+  const [errors, setErrors] = useState({});
 
   const columns = [
     { key: 'name', label: 'Nama Kategori' },
@@ -35,7 +44,7 @@ export default function Categories() {
     return matchesSearch;
   });
 
-  const sorted = React.useMemo(() => {
+  const sorted = useMemo(() => {
     if (!sortKey) return filtered;
     return [...filtered].sort((a, b) => {
       const va = a[sortKey];
@@ -63,12 +72,79 @@ export default function Categories() {
     setSortDir((d) => (d === 'asc' ? 'desc' : 'asc'));
   }
 
-  function handleAdd(e) {
-    e.preventDefault();
-    const item = { id: data.length + 1, name, description: desc, events: 0, createdAt: new Date().toISOString().slice(0, 10) };
-    setData([item, ...data]);
+  const handleImageChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setImgFile(file);
+      setImgPreview(URL.createObjectURL(file));
+      if (errors.img) setErrors(prev => ({ ...prev, img: null }));
+    }
+  };
+
+  const closeDialog = () => {
     setOpen(false);
-    setName(''); setDesc('');
+    setEditingId(null);
+    setName('');
+    setDesc('');
+    setImgFile(null);
+    setImgPreview('');
+    setErrors({});
+  };
+
+  const handleEdit = (row) => {
+    setEditingId(row.id);
+    setName(row.name);
+    setDesc(row.description);
+    setImgPreview(''); // Reset jika tidak ada URL gambar di awal
+    setOpen(true);
+  };
+
+  async function handleCancel() {
+    const config = editingId 
+      ? { title: "Batal ?", text: "Data yang anda ubah tidak akan disimpan.", confirmText: "Ya, Batal Edit" }
+      : { title: "Batal ?", text: "Data yang anda masukkan akan hilang.", confirmText: "Ya, Batal" };
+
+    const res = await confirmAlert({
+      title: config.title,
+      text: config.text,
+      confirmText: config.confirmText,
+    });
+
+    if (res.isConfirmed) closeDialog();
+  }
+
+  async function handleAdd(e) {
+    e.preventDefault();
+    const newErrors = {};
+
+    if (!name.trim()) newErrors.name = "Nama Kategori wajib diisi.";
+    if (!desc.trim() || desc === "<p></p>") newErrors.desc = "Deskripsi wajib diisi.";
+    if (!imgFile && !imgPreview) newErrors.img = "Gambar wajib diisi.";
+
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors);
+      return;
+    }
+
+    if (editingId) {
+      setData(data.map(item => item.id === editingId 
+        ? { ...item, name, description: desc.replace(/<[^>]*>/g, '') } 
+        : item
+      ));
+      await successAlert("Berhasil", "Kategori Berhasil diubah.");
+    } else {
+      const item = { 
+        id: data.length + 1, 
+        name, 
+        description: desc.replace(/<[^>]*>/g, ''),
+        events: 0, 
+        createdAt: new Date().toISOString().slice(0, 10) 
+      };
+      setData([item, ...data]);
+      await successAlert("Berhasil", "Kategori Baru ditambah.");
+    }
+
+    closeDialog();
     setPage(1);
   }
 
@@ -113,43 +189,42 @@ export default function Categories() {
                     <button
                       className="inline-flex items-center gap-2 text-left w-full"
                       onClick={() => toggleSort(c.key)}
-                      aria-label={`Sort by ${c.label}`}
                     >
                       <span>{c.label}</span>
                       <span className="ml-1">
                         {sortKey === c.key ? (
                           sortDir === 'asc' ? (
-                            <svg className="w-3 h-3 text-slate-600" viewBox="0 0 20 20" fill="currentColor" aria-hidden>
-                              <path d="M5 12l5-5 5 5H5z" />
-                            </svg>
+                            <svg className="w-3 h-3 text-slate-600" viewBox="0 0 20 20" fill="currentColor"><path d="M5 12l5-5 5 5H5z" /></svg>
                           ) : (
-                            <svg className="w-3 h-3 text-slate-600" viewBox="0 0 20 20" fill="currentColor" aria-hidden>
-                              <path d="M15 8l-5 5-5-5h10z" />
-                            </svg>
+                            <svg className="w-3 h-3 text-slate-600" viewBox="0 0 20 20" fill="currentColor"><path d="M15 8l-5 5-5-5h10z" /></svg>
                           )
                         ) : (
-                          <svg className="w-3 h-3 text-slate-300" viewBox="0 0 20 20" fill="currentColor" aria-hidden>
-                            <path d="M5 12l5-5 5 5H5z" />
-                          </svg>
+                          <svg className="w-3 h-3 text-slate-300" viewBox="0 0 20 20" fill="currentColor"><path d="M5 12l5-5 5 5H5z" /></svg>
                         )}
                       </span>
                     </button>
                   </th>
                 ))}
+                <th className="px-3 py-2 text-right">Action</th>
               </tr>
             </thead>
             <tbody className="divide-y">
               {pageData.length === 0 ? (
                 <tr>
-                  <td colSpan={columns.length} className="px-3 py-6 text-center text-slate-500">No categories found.</td>
+                  <td colSpan={columns.length + 1} className="px-3 py-6 text-center text-slate-500">No categories found.</td>
                 </tr>
               ) : (
                 pageData.map((row) => (
                   <tr key={row.id} className="hover:bg-slate-50 transition-colors">
-                    <td className="px-3 py-3">{row.name}</td>
+                    <td className="px-3 py-3 font-medium">{row.name}</td>
                     <td className="px-3 py-3">{row.description}</td>
                     <td className="px-3 py-3">{row.events}</td>
                     <td className="px-3 py-3">{row.createdAt}</td>
+                    <td className="px-3 py-3 text-right">
+                       <Button variant="ghost" size="sm" onClick={() => handleEdit(row)} className="text-blue-600 hover:text-blue-700">
+                          <Edit size={16} className="mr-1" /> Edit
+                       </Button>
+                    </td>
                   </tr>
                 ))
               )}
@@ -199,22 +274,54 @@ export default function Categories() {
         </div>
       </div>
 
-      <Dialog open={open} onOpenChange={setOpen}>
+      <Dialog open={open} onOpenChange={(val) => !val ? handleCancel() : setOpen(true)}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Add Kategori</DialogTitle>
+            <DialogTitle>{editingId ? 'Edit Kategori' : 'Add Kategori'}</DialogTitle>
           </DialogHeader>
           <form onSubmit={handleAdd} className="space-y-4">
             <div>
-              <label className="block text-sm mb-1">Nama Kategori</label>
-              <Input value={name} onChange={(e) => setName(e.target.value)} />
+              <label className="block text-sm mb-1">Nama Kategori <span className="text-red-500">*</span></label>
+              <Input 
+                value={name} 
+                onChange={(e) => { setName(e.target.value); if(errors.name) setErrors(p => ({...p, name: null})) }} 
+                className={errors.name ? "border-red-500" : ""}
+              />
+              {errors.name && <p className="text-xs text-red-500 mt-1">{errors.name}</p>}
             </div>
             <div>
-              <label className="block text-sm mb-1">Deskripsi</label>
-              <Input value={desc} onChange={(e) => setDesc(e.target.value)} />
+              <label className="text-sm font-medium">Deskripsi <span className="text-red-500">*</span></label>
+              <div className={`border rounded-md ${errors.desc ? "border-red-500" : ""}`}>
+                <RichTextEditor
+                  value={desc}
+                  onChange={(val) => { setDesc(val); if(errors.desc) setErrors(p => ({...p, desc: null})) }}
+                  className="min-h-[120px] max-h-60 overflow-y-auto"
+                />
+              </div>
+              {errors.desc && <p className="text-xs text-red-500 mt-1">{errors.desc}</p>}
             </div>
-            <div className="flex justify-end">
-              <Button type="submit">Save</Button>
+            <div className="w-full">
+              <label className="text-sm font-medium">Gambar <span className="text-red-500">*</span></label>
+              <div className="mt-1">
+                <label 
+                  className={`flex flex-col h-40 border-2 border-dashed rounded-lg items-center justify-center cursor-pointer hover:bg-slate-50 transition-colors overflow-hidden ${errors.img ? 'border-red-500 bg-red-50' : imgPreview ? 'border-primary' : 'border-slate-300'}`}
+                >
+                  {imgPreview ? (
+                    <img src={imgPreview} alt="Preview" className="max-h-full object-contain" />
+                  ) : (
+                    <div className="flex flex-col items-center">
+                      <svg className={`w-8 h-8 mb-2 ${errors.img ? 'text-red-400' : 'text-slate-400'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4" /></svg>
+                      <span className={`text-sm ${errors.img ? 'text-red-500' : 'text-slate-500'}`}>Upload Gambar</span>
+                    </div>
+                  )}
+                  <Input type="file" className="hidden" accept="image/*" onChange={handleImageChange} />
+                </label>
+              </div>
+              {errors.img && <p className="text-xs text-red-500 mt-1">{errors.img}</p>}
+            </div>
+            <div className="flex justify-end gap-3 pt-4">
+              <Button type="button" variant="outline" onClick={handleCancel}>Batal</Button>
+              <Button type="submit">{editingId ? 'Simpan Perubahan' : 'Save'}</Button>
             </div>
           </form>
         </DialogContent>
